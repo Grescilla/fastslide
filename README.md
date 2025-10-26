@@ -251,4 +251,3 @@ FastSlide incorporates the following third-party software:
 FastSlide is licensed under the **Apache License, Version 2.0**.
 
 See [LICENSE](../../LICENSE) for full details.
->>>>>>> sync/monorepo/internal
