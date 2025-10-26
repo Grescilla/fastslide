@@ -5,75 +5,47 @@ FastSlide Documentation
    :maxdepth: 2
    :caption: Contents:
 
-   overview
-   architecture
-   caching
    formats/index
    api/index
-   guides/index
-   examples/index
 
-Documentation Structure
------------------------
+About FastSlide
+---------------
 
-FastSlide provides two complementary documentation systems:
+FastSlide is a high-performance C++ library for reading whole slide images (WSI) in digital pathology, 
+with native Python bindings for integration into machine learning and scientific computing workflows.
 
-**This Sphinx Documentation** (You are here)
-   - **Overview and Guides**: High-level architecture, tutorials, and examples
-   - **Python API**: Complete Python interface documentation
-   - **C++ API Overview**: Quick reference with Breathe integration
-   - **Cross-references**: Links between C++ and Python APIs
+**Design Goals:**
 
-**`Doxygen Documentation <../doxygen/index.html>`_** (Detailed C++ Reference)
-   - **Interactive Diagrams**: Zoomable SVG dependency graphs
-   - **Complete C++ API**: Every class, function, and namespace
-   - **Call Graphs**: Function dependencies and relationships
-   - **Inheritance Diagrams**: Visual class hierarchies
-   - **Source Browser**: Browse C++ source code with syntax highlighting
+- **Fast C++ Core**: Built with modern C++20 for maximum performance
+- **Native Python Bindings**: Zero-overhead integration using pybind11
+- **Thread-Safe**: Safe for multi-threaded applications and PyTorch DataLoaders
+- **Format Support**: MRXS (3DHistech), Aperio SVS, and QPTIFF formats
 
-.. tip::
-   **For C++ Developers**: Start with the `Doxygen Documentation <../doxygen/index.html>`_ 
-   for comprehensive API details and interactive visualizations.
-   
-   **For Python Users**: Continue with the :doc:`api/python_api` for complete Python interface docs.
-   
-   **For New Contributors**: See the :doc:`guides/index` for step-by-step implementation guides.
+**Documentation:**
 
-.. image:: https://img.shields.io/badge/version-2.0-blue.svg
-   :alt: Version 0.0.1
-
-.. image:: https://img.shields.io/badge/C++-20-green.svg
-   :alt: C++20
-
-.. image:: https://img.shields.io/badge/Python-3.11+-green.svg
-   :alt: Python 3.11+
-
-FastSlide is a high-performance whole slide image reader library with both C++ and Python APIs.
-
-Features
---------
-
-🚀 **High Performance**
-   - Memory-efficient tile caching
-   - Multi-threaded processing
-   - Optimized I/O operations
-
-🔧 **Multi-Format Support**
-   - MRXS (3DHistech)
-   - Aperio SVS
-   - QPTIFF
-   - Generic TIFF
-
-🌐 **Cross-Platform**
-   - macOS, Linux
-   - x86_64 and ARM64 architectures
-
-🐍 **Dual APIs**
-   - Native C++20 API with modern features
-   - Python bindings with NumPy integration
+- **Python API**: :doc:`api/python_api` - Complete Python interface documentation
+- **C++ API**: :doc:`api/cpp_api` - C++ interface overview, or see `Doxygen Documentation <../doxygen/index.html>`_ for full details
+- **Format Support**: :doc:`formats/index` - Supported file formats
 
 Quick Start
 -----------
+
+Python API
+~~~~~~~~~~
+
+.. code-block:: python
+
+   import fastslide
+   
+   # Open a slide
+   slide = fastslide.SlideReader("slide.mrxs")
+   
+   # Read a region
+   region = slide.read_region((0, 0), 0, (1024, 1024))
+   
+   # Get slide properties
+   print(f"Slide dimensions: {slide.dimensions}")
+   print(f"Available levels: {len(slide.level_dimensions)}")
 
 C++ API
 ~~~~~~~
@@ -96,27 +68,3 @@ C++ API
    std::cout << "Slide dimensions: " 
              << properties.base_dimensions.width << "x" 
              << properties.base_dimensions.height << std::endl;
-
-Python API
-~~~~~~~~~~
-
-.. code-block:: python
-
-   import fastslide
-   
-   # Open a slide
-   slide = fastslide.SlideReader("slide.mrxs")
-   
-   # Read a region
-   region = slide.read_region((0, 0), 0, (1024, 1024))
-   
-   # Get slide properties
-   print(f"Slide dimensions: {slide.dimensions}")
-   print(f"Available levels: {len(slide.level_dimensions)}")
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`

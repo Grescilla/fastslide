@@ -209,37 +209,25 @@ x0, y0 = slide.convert_level_native_to_level0(100, 200, level=2)
 
 We welcome contributions! See [CONTRIBUTING.md](../../CONTRIBUTING.md) for guidelines.
 
-## License
-
-FastSlide is licensed under the **Apache License, Version 2.0**.
-
-This permissive license allows you to:
-
-- ✅ Use FastSlide commercially
-- ✅ Modify the source code
-- ✅ Distribute original or modified versions
-- ✅ Use FastSlide in proprietary software
-
-See [LICENSE](../../LICENSE) for full details.
-
-### Third-Party Components
+## Third-Party Components
 
 FastSlide incorporates the following third-party software:
 
 - **SHA-256 implementation** from [sha-2](https://github.com/amosnier/sha-2) by Alain Mosnier
-
   - Licensed under: The Unlicense or Zero Clause BSD license
   - Used for: Quick hash computation compatible with OpenSlide
 
 - **unordered_dense** from [martinus/unordered_dense](https://github.com/martinus/unordered_dense) by Martin Leitner-Ankerl
-
   - Licensed under: MIT License
   - Used for: Fast hashmap/hashset for spatial lookup in the Mirax format
 
 - **lodepng** from [vandeve/lodepng](https://github.com/lvandeve/lodepng) by Lode Vandevenne
   - Licensed under: Zlib License
   - Used for: Decoding PNG in file formats and to write png in examples.
-- **pugixml**: from
+
+- **pugixml**: from [pugixml.org](https://pugixml.org/)
+  - Licensed under: MIT License
+  - Used for: Parsing of XML headers
 
 ## Citation
 
@@ -257,3 +245,9 @@ FastSlide incorporates the following third-party software:
 - **Documentation**: https://docs.aifo.dev/fastslide/
 - **Issues**: [GitHub Issues](https://github.com/NKI-AI/fastslide/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/NKI-AI/fastslide/discussions)
+
+## License
+
+FastSlide is licensed under the **Apache License, Version 2.0**.
+
+See [LICENSE](../../LICENSE) for full details.
