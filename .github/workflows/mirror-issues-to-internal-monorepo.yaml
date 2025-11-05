@@ -4,62 +4,48 @@ on:
   issues:
     types: [opened]
 
-permissions:
-  contents: read
-  issues: read
-
 jobs:
   mirror:
     runs-on: ubuntu-latest
     steps:
-      - name: Install GitHub CLI
-        run: sudo apt-get update && sudo apt-get install -y gh jq
-
-      - name: Prepare data
-        id: prep
-        env:
-          ISSUE_TITLE: ${{ github.event.issue.title }}
-          ISSUE_BODY: ${{ github.event.issue.body }}
-          SRC_REPO: ${{ github.repository }}
-          SRC_NUM: ${{ github.event.issue.number }}
-        run: |
-          echo "title=External[FastSlide]: ${ISSUE_TITLE}" >> "$GITHUB_OUTPUT"
-          cat > body.txt <<EOF
-🔗 **Source:** https://github.com/${SRC_REPO}/issues/${SRC_NUM}
-
----
-${ISSUE_BODY}
-
----
-External-Source: ${SRC_REPO}#${SRC_NUM}
-EOF
-          {
-            echo "body<<BODY"
-            cat body.txt
-            echo "BODY"
-          } >> "$GITHUB_OUTPUT"
-
-      - name: Avoid duplicates (if manually re-run)
-        id: dedupe
+      - name: Mirror to aiforoncology-internal
         env:
           GH_TOKEN: ${{ secrets.INTERNAL_REPO_PAT }}
-          REPO: NKI-AI/aiforoncology-internal
+          REPO_INTERNAL: NKI-AI/aiforoncology-internal
           SRC_REPO: ${{ github.repository }}
           SRC_NUM: ${{ github.event.issue.number }}
+          SRC_TITLE: ${{ github.event.issue.title }}
+          SRC_BODY: ${{ github.event.issue.body }}
+        shell: bash
         run: |
-          Q="repo:${REPO} is:issue in:body \"External-Source: ${SRC_REPO}#${SRC_NUM}\""
+          # Ensure gh exists (ubuntu-latest usually has it)
+          if ! command -v gh >/dev/null 2>&1; then
+            sudo apt-get update && sudo apt-get install -y gh
+          fi
+
+          TITLE="External[FastSlide]: ${SRC_TITLE}"
+
+          # De-dupe: look for our unique marker in internal repo
+          Q="repo:${REPO_INTERNAL} is:issue in:body \"External-Source: ${SRC_REPO}#${SRC_NUM}\""
           COUNT=$(gh api -X GET search/issues -f q="$Q" --jq '.total_count')
-          echo "count=$COUNT" >> "$GITHUB_OUTPUT"
+          if [ "$COUNT" -gt 0 ]; then
+            echo "Already mirrored. Skipping."
+            exit 0
+          fi
 
-      - name: Create mirrored issue in internal repo
-        if: steps.dedupe.outputs.count == '0'
-        env:
-          GH_TOKEN: ${{ secrets.INTERNAL_REPO_PAT }}
-          TITLE: ${{ steps.prep.outputs.title }}
-          BODY: ${{ steps.prep.outputs.body }}
-        run: |
-          gh api repos/NKI-AI/aiforoncology-internal/issues \
+          # Compose body
+          {
+            echo "🔗 **Source:** https://github.com/${SRC_REPO}/issues/${SRC_NUM}"
+            echo
+            echo '---'
+            [ -n "${SRC_BODY}" ] && echo "${SRC_BODY}"
+            echo
+            echo '---'
+            echo "External-Source: ${SRC_REPO}#${SRC_NUM}"
+          } > /tmp/body.md
+
+          # Create internal issue
+          gh api "repos/${REPO_INTERNAL}/issues" \
             -f title="$TITLE" \
-            -f body="$BODY" \
-            -f labels="external-fastslide" \
-            --jq '.number' | xargs -I {} echo "Mirrored as internal issue #{}"
+            -f body="$(cat /tmp/body.md)" \
+            -f labels="external-fastslide"
