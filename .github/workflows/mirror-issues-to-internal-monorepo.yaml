@@ -1,0 +1,70 @@
+name: Mirror issues to internal monorepo
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  contents: read
+  issues: read
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read   # to read repo metadata
+      issues: read     # to read the triggering issue
+    steps:
+      - name: Install GitHub CLI
+        run: sudo apt-get update && sudo apt-get install -y gh jq
+
+      - name: Prepare data
+        id: prep
+        env:
+          SOURCE_REPO: ${{ github.repository }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+        run: |
+          # Title with required prefix
+          echo "title=External[FastSlide]: ${ISSUE_TITLE}" >> "$GITHUB_OUTPUT"
+
+          # Compose body with a backlink and a unique marker to avoid duplicates
+          cat > body.txt << 'EOF'
+          🔗 **Source:** https://github.com/${{ github.repository }}/issues/${{ github.event.issue.number }}
+
+          ---
+          ${{ github.event.issue.body }}
+
+          ---
+          External-Source: ${{ github.repository }}#${{ github.event.issue.number }}
+          EOF
+          echo "body<<BODY" >> "$GITHUB_OUTPUT"
+          cat body.txt >> "$GITHUB_OUTPUT"
+          echo "BODY" >> "$GITHUB_OUTPUT"
+
+      - name: Avoid duplicates (if manually re-run)
+        id: dedupe
+        env:
+          GH_TOKEN: ${{ secrets.INTERNAL_REPO_PAT }}
+          QUERY: "repo:NKI-AI/aiforoncology-internal in:body \"External-Source: ${{ github.repository }}#${{ github.event.issue.number }}\""
+        run: |
+          # search/issues API returns total_count; if >0, we skip creation
+          COUNT=$(gh api -X GET search/issues -f q="$QUERY" --jq '.total_count')
+          echo "count=$COUNT" >> "$GITHUB_OUTPUT"
+
+      - name: Create mirrored issue in internal repo
+        if: steps.dedupe.outputs.count == '0'
+        env:
+          GH_TOKEN: ${{ secrets.INTERNAL_REPO_PAT }}
+          TITLE: ${{ steps.prep.outputs.title }}
+          BODY: ${{ steps.prep.outputs.body }}
+        run: |
+          # Optionally map labels from external; here we add a fixed label
+          LABELS="external-fastslide"
+          gh api repos/NKI-AI/aiforoncology-internal/issues \
+            -f title="$TITLE" \
+            -f body="$BODY" \
+            -f labels="$LABELS" \
+            --jq '.number' \
+            | xargs -I {} echo "Mirrored as internal issue #{}"
